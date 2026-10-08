@@ -1,6 +1,6 @@
 import asyncio
 import pytest
-from src.queue.manager import (
+from src.task_queue.manager import (
     WorkerQueueManager,
     QueueFullError,
     QueueTimeoutError,

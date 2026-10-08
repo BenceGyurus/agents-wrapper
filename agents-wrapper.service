@@ -7,7 +7,7 @@ After=network.target
 Type=simple
 User=bence
 WorkingDirectory=/Users/bence/Documents/programming/cli-agent-wrapper
-ExecStart=/Users/bence/Documents/programming/cli-agent-wrapper/.venv/bin/python /Users/bence/Documents/programming/cli-agent-wrapper/src/main.py --host 0.0.0.0 --port 11434
+ExecStart=/Users/bence/Documents/programming/cli-agent-wrapper/.venv/bin/python -m src.main --host 0.0.0.0 --port 11434
 Restart=always
 RestartSec=5
 Environment=PYTHONUNBUFFERED=1

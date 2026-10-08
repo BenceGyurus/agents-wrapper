@@ -49,7 +49,7 @@ After=network.target
 Type=simple
 User=$RUN_USER
 WorkingDirectory=$SCRIPT_DIR
-ExecStart=$VENV_PYTHON $MAIN_SCRIPT --host 0.0.0.0 --port 11434
+ExecStart=$VENV_PYTHON -m src.main --host 0.0.0.0 --port 11434
 Restart=always
 RestartSec=5
 Environment=PYTHONUNBUFFERED=1

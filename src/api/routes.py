@@ -23,7 +23,7 @@ from src.pipeline.context import PipelineContext
 from src.pipeline.runner import PipelineRunner
 from src.backends.router import ModelRouter
 from src.backends.base import BackendExecutionError
-from src.queue.manager import (
+from src.task_queue.manager import (
     WorkerQueueManager,
     QueueFullError,
     QueueTimeoutError,

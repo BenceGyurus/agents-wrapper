@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.config import AppConfig, load_config
 from src.backends.router import ModelRouter
-from src.queue.manager import WorkerQueueManager
+from src.task_queue.manager import WorkerQueueManager
 from src.api.routes import create_routes
 
 

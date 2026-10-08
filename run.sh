@@ -64,4 +64,5 @@ echo "📥 [2/3] Függőségek ellenőrzése és telepítése (requirements.txt)
 # 4. Szerver indítása
 echo "🚀 [3/3] Szerver indítása..."
 export PYTHONPATH="$SCRIPT_DIR"
-exec "$VENV_DIR/bin/python" src/main.py "$@"
+exec "$VENV_DIR/bin/python" -m src.main "$@"
+
