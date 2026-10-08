@@ -11,6 +11,8 @@ from src.schemas.ollama import (
     ChatMessageResponse,
     ChatStreamChunk,
     GenerateStreamChunk,
+    PsModelInfo,
+    PsResponse,
 )
 
 __all__ = [
@@ -26,4 +28,6 @@ __all__ = [
     "ChatMessageResponse",
     "ChatStreamChunk",
     "GenerateStreamChunk",
+    "PsModelInfo",
+    "PsResponse",
 ]

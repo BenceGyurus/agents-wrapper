@@ -14,7 +14,7 @@ class ServerConfig(BaseModel):
 class AgyBackendConfig(BaseModel):
     binary_path: str = "agy"
     default_model: str = "gemini-3.8-flash-high"
-    default_effort: str = "high"
+    default_effort: str = ""
     auto_discover_models: bool = True
     timeout_seconds: int = 120
 
@@ -23,6 +23,14 @@ class CodexBackendConfig(BaseModel):
     binary_path: str = "codex"
     default_sandbox: str = "read-only"
     timeout_seconds: int = 120
+
+
+class QueueConfig(BaseModel):
+    enabled: bool = True
+    max_workers: int = 2
+    max_queue_size: int = 50
+    job_timeout_seconds: float = 120.0
+    queue_wait_timeout_seconds: float = 30.0
 
 
 class BackendsConfig(BaseModel):
@@ -53,6 +61,7 @@ class AppConfig(BaseModel):
     server: ServerConfig = Field(default_factory=ServerConfig)
     backends: BackendsConfig = Field(default_factory=BackendsConfig)
     pipeline: PipelineConfig = Field(default_factory=PipelineConfig)
+    queue: QueueConfig = Field(default_factory=QueueConfig)
     profiles: Dict[str, ProfileConfig] = Field(default_factory=dict)
 
 

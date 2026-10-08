@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.config import AppConfig, load_config
 from src.backends.router import ModelRouter
+from src.queue.manager import WorkerQueueManager
 from src.api.routes import create_routes
 
 
@@ -24,6 +25,7 @@ def create_app(config: AppConfig = None) -> FastAPI:
     logger = logging.getLogger("wrapper.server")
 
     model_router = ModelRouter(config)
+    queue_manager = WorkerQueueManager(config.queue)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -31,6 +33,10 @@ def create_app(config: AppConfig = None) -> FastAPI:
         # Pre-cache available models
         discovered = await model_router.discover_agy_models()
         logger.info(f"Available Antigravity models discovered: {len(discovered)}")
+        logger.info(
+            f"Queue manager initialized: workers={config.queue.max_workers}, "
+            f"max_queue={config.queue.max_queue_size}, timeout={config.queue.job_timeout_seconds}s"
+        )
         logger.info(f"Server ready on http://{config.server.host}:{config.server.port}")
         yield
         logger.info("Shutting down CLI Agent Wrapper...")
@@ -52,7 +58,7 @@ def create_app(config: AppConfig = None) -> FastAPI:
     )
 
     # Attach Ollama endpoints
-    routes = create_routes(config, model_router)
+    routes = create_routes(config, model_router, queue_manager)
     app.include_router(routes)
 
     return app

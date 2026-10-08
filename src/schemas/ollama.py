@@ -103,3 +103,25 @@ class GenerateStreamChunk(BaseModel):
     total_duration: Optional[int] = None
     prompt_eval_count: Optional[int] = None
     eval_count: Optional[int] = None
+
+
+# Process Status Schema for GET /api/ps
+class PsModelDetails(BaseModel):
+    format: str = "cli"
+    family: str = "antigravity"
+
+
+class PsModelInfo(BaseModel):
+    name: str
+    model: str
+    size: int = 0
+    digest: str = "active-model"
+    details: PsModelDetails = Field(default_factory=PsModelDetails)
+    expires_at: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+    )
+    size_vram: int = 0
+
+
+class PsResponse(BaseModel):
+    models: List[PsModelInfo] = Field(default_factory=list)

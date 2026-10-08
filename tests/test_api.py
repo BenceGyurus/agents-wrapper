@@ -71,6 +71,25 @@ async def test_chat_mock_non_stream():
         assert data["done"] is True
         assert data["message"]["role"] == "assistant"
         assert "Mock response from" in data["message"]["content"]
+        # Open WebUI integer conversion compatibility
+        assert isinstance(data.get("prompt_eval_count"), int)
+        assert isinstance(data.get("eval_count"), int)
+        assert int(data["prompt_eval_count"]) > 0
+        assert int(data["eval_count"]) > 0
+
+
+@pytest.mark.asyncio
+async def test_ps_endpoint():
+    config = load_config()
+    app = create_app(config)
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        resp = await client.get("/api/ps")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "models" in data
+        assert isinstance(data["models"], list)
 
 
 @pytest.mark.asyncio
@@ -93,11 +112,18 @@ async def test_chat_mock_stream():
         assert len(lines) > 1
 
         chunks = [json.loads(line) for line in lines]
-        # Check intermediate chunks
-        assert any("Mock response" in c["message"]["content"] for c in chunks)
-        # Check last chunk
-        assert chunks[-1]["done"] is True
-        assert chunks[-1]["done_reason"] == "stop"
+        # Intermediate chunks should NOT contain null prompt_eval_count
+        for c in chunks[:-1]:
+            assert "prompt_eval_count" not in c or c["prompt_eval_count"] is not None
+
+        # Check last chunk has integer metrics for Open WebUI
+        last = chunks[-1]
+        assert last["done"] is True
+        assert last["done_reason"] == "stop"
+        assert isinstance(last.get("prompt_eval_count"), int)
+        assert isinstance(last.get("eval_count"), int)
+        assert int(last["prompt_eval_count"]) > 0
+        assert int(last["eval_count"]) > 0
 
 
 @pytest.mark.asyncio

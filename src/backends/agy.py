@@ -15,7 +15,7 @@ class AntigravityBackend(BaseBackend):
         super().__init__(name, config)
         self.binary_path = self.config.get("binary_path", "agy")
         self.default_model = self.config.get("default_model", "gemini-3.8-flash-high")
-        self.default_effort = self.config.get("default_effort", "high")
+        self.default_effort = self.config.get("default_effort", "")
         self.timeout_seconds = self.config.get("timeout_seconds", 120)
 
     def _resolve_binary(self) -> str:
@@ -45,9 +45,19 @@ class AntigravityBackend(BaseBackend):
         if mode:
             cmd.extend(["--mode", mode])
 
-        effort = kwargs.get("effort") or self.default_effort
-        if effort:
-            cmd.extend(["--effort", effort])
+        # Check if model name already specifies the reasoning effort level
+        has_embedded_effort = False
+        if model:
+            for suffix in ["-low", "-medium", "-high", "-xhigh", "-max", "-thinking"]:
+                if model.endswith(suffix):
+                    has_embedded_effort = True
+                    break
+
+        # Only pass --effort if the model does not already dictate it
+        if not has_embedded_effort:
+            effort = kwargs.get("effort") or self.default_effort
+            if effort:
+                cmd.extend(["--effort", effort])
 
         logger.info(f"Executing Antigravity CLI: {' '.join(cmd[:4])} ... [prompt_len={len(prompt)}]")
 

@@ -7,7 +7,7 @@ backends:
   agy:
     binary_path: "agy"
     default_model: "gemini-3.8-flash-high"
-    default_effort: "high"
+    default_effort: ""  # Empty: allows agy to use model's built-in effort (-low, -medium, -high)
     auto_discover_models: true
     timeout_seconds: 120
 
@@ -15,6 +15,13 @@ backends:
     binary_path: "codex"
     default_sandbox: "read-only"
     timeout_seconds: 120
+
+queue:
+  enabled: true
+  max_workers: 2               # Maximum concurrent CLI agents executing simultaneously
+  max_queue_size: 50           # Maximum waiting requests in queue before rejecting with 429
+  job_timeout_seconds: 120     # Timeout in seconds for model execution (auto-terminates if hung)
+  queue_wait_timeout_seconds: 30 # Maximum time a request waits in queue for a free worker
 
 pipeline:
   layers:
