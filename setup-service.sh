@@ -17,14 +17,20 @@ MAIN_SCRIPT="$SCRIPT_DIR/src/main.py"
 SERVICE_NAME="agents-wrapper.service"
 SERVICE_FILE_PATH="/etc/systemd/system/$SERVICE_NAME"
 
-# Ellenőrizzük, hogy a venv létezik-e
-if [ ! -f "$VENV_PYTHON" ]; then
-    echo "📦 Virtuális környezet előkészítése..."
-    python3 -m venv "$SCRIPT_DIR/.venv"
-    "$SCRIPT_DIR/.venv/bin/pip" install --upgrade pip -q
-    "$SCRIPT_DIR/.venv/bin/pip" install -r "$SCRIPT_DIR/requirements.txt" -q
-    "$SCRIPT_DIR/.venv/bin/pip" install -e "$SCRIPT_DIR" -q
+# Ellenőrizzük, hogy a venv létezik-e és működőképes-e
+if [ ! -f "$VENV_PYTHON" ] || ! "$VENV_PYTHON" -c "import sys" &> /dev/null; then
+    echo "📦 Virtuális környezet előkészítése / újragenerálása..."
+    rm -rf "$SCRIPT_DIR/.venv"
+    if ! python3 -m venv "$SCRIPT_DIR/.venv" 2>/dev/null; then
+        echo "❌ Hiba a venv létrehozásakor! Telepítsd: sudo apt update && sudo apt install -y python3-venv python3-pip"
+        exit 1
+    fi
 fi
+
+# Pip és csomagok telepítése python -m pip használatával
+"$VENV_PYTHON" -m pip install --upgrade pip -q
+"$VENV_PYTHON" -m pip install -r "$SCRIPT_DIR/requirements.txt" -q
+"$VENV_PYTHON" -m pip install -e "$SCRIPT_DIR" -q
 
 # PATH összerakása, hogy a CLI-k (agy, codex) elérhetők legyenek systemd alatt
 CAPTURED_PATH="$PATH:/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin:/home/$RUN_USER/.local/bin"
