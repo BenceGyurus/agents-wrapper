@@ -25,3 +25,12 @@ def test_codex_backend_missing_binary():
     with pytest.raises(BackendExecutionError) as exc_info:
         backend._resolve_binary()
     assert "not found in PATH" in str(exc_info.value)
+
+
+def test_agy_backend_config_skip_permissions():
+    backend_skip = AntigravityBackend(config={"skip_permissions": True})
+    assert backend_skip.skip_permissions is True
+
+    backend_no_skip = AntigravityBackend(config={"skip_permissions": False})
+    assert backend_no_skip.skip_permissions is False
+

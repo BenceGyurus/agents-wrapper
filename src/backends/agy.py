@@ -16,6 +16,7 @@ class AntigravityBackend(BaseBackend):
         self.binary_path = self.config.get("binary_path", "agy")
         self.default_model = self.config.get("default_model", "gemini-3.8-flash-high")
         self.default_effort = self.config.get("default_effort", "")
+        self.skip_permissions = self.config.get("skip_permissions", True)
         self.timeout_seconds = self.config.get("timeout_seconds", 120)
 
     def _resolve_binary(self) -> str:
@@ -35,7 +36,10 @@ class AntigravityBackend(BaseBackend):
         binary = self._resolve_binary()
         
         # Build command flags
-        cmd = [binary, "-p", prompt, "--output-format", "stream-json"]
+        cmd = [binary, "-p", prompt, "--output-format", "stream-json", "--disable-slash-commands"]
+
+        if self.skip_permissions:
+            cmd.append("--dangerously-skip-permissions")
 
         model = kwargs.get("model") or self.default_model
         if model:
@@ -107,6 +111,20 @@ class AntigravityBackend(BaseBackend):
                         elif event == "result":
                             result = data.get("result", {})
                             final_resp = result.get("response", "")
+                            error_msg = result.get("error", "")
+                            status = result.get("status", "")
+                            denied_actions = result.get("denied_actions", [])
+
+                            if denied_actions and not yielded_any:
+                                denied_str = ", ".join(d.get("display_name", str(d)) for d in denied_actions)
+                                raise BackendExecutionError(
+                                    f"Antigravity tool permission was auto-denied: {denied_str}. "
+                                    "Please ensure skip_permissions is enabled."
+                                )
+
+                            if status == "ERROR" and error_msg and not yielded_any:
+                                raise BackendExecutionError(f"Antigravity CLI failed: {error_msg}")
+
                             # If no deltas were yielded before, yield full final response
                             if not yielded_any and final_resp:
                                 yielded_any = True
@@ -120,9 +138,10 @@ class AntigravityBackend(BaseBackend):
             await proc.wait()
             await stderr_task
 
-            if proc.returncode != 0 and not yielded_any:
-                err_msg = "\n".join(stderr_output) or f"Process exited with code {proc.returncode}"
-                raise BackendExecutionError(f"Antigravity CLI failed: {err_msg}")
+            if not yielded_any:
+                err_msg = "\n".join(stderr_output) or f"Process exited with code {proc.returncode} without output."
+                logger.error(f"Antigravity CLI yielded 0 chars (exit code {proc.returncode}). Stderr: {err_msg}")
+                raise BackendExecutionError(f"Antigravity CLI failed to produce a response:\n{err_msg}")
 
         except asyncio.CancelledError:
             proc.kill()

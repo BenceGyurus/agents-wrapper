@@ -16,6 +16,7 @@ class AgyBackendConfig(BaseModel):
     default_model: str = "gemini-3.8-flash-high"
     default_effort: str = ""
     auto_discover_models: bool = True
+    skip_permissions: bool = True
     timeout_seconds: int = 120
 
 

@@ -9,7 +9,8 @@ backends:
     default_model: "gemini-3.8-flash-high"
     default_effort: ""  # Empty: allows agy to use model's built-in effort (-low, -medium, -high)
     auto_discover_models: true
-    timeout_seconds: 120
+    skip_permissions: true # Auto-approves tool requests in headless mode to prevent blank responses
+    timeout_seconds: 180
 
   codex:
     binary_path: "codex"

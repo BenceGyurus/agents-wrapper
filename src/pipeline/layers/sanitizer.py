@@ -35,8 +35,12 @@ class PromptSanitizerLayer(BaseLayer):
                 parts.append(non_system_msgs[0].content.strip())
             else:
                 for msg in non_system_msgs:
+                    content = msg.content.strip()
+                    # Skip empty assistant placeholder turns so failed prior responses don't poison subsequent prompts
+                    if not content and msg.role.lower() == "assistant":
+                        continue
                     role_label = msg.role.capitalize()
-                    parts.append(f"[{role_label}]:\n{msg.content.strip()}\n")
+                    parts.append(f"[{role_label}]:\n{content}\n")
         elif ctx.prompt_text:
             parts.append(ctx.prompt_text.strip())
 
