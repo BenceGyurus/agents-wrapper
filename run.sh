@@ -15,6 +15,12 @@ if ! command -v python3 &> /dev/null; then
     exit 1
 fi
 
+# Ha systemd service beállítást kértek
+if [ "$1" = "--service" ] || [ "$1" = "--install-service" ]; then
+    shift
+    exec "$SCRIPT_DIR/setup-service.sh" "$@"
+fi
+
 # 2. Virtuális környezet (.venv) létrehozása, ha nem létezik vagy hibás
 VENV_DIR="$SCRIPT_DIR/.venv"
 if [ ! -d "$VENV_DIR" ] || [ ! -f "$VENV_DIR/bin/python" ]; then

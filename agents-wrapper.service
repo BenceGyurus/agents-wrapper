@@ -1,0 +1,20 @@
+[Unit]
+Description=agents-wrapper (Ollama-compatible API Gateway for AI CLI Agents)
+Documentation=https://github.com/BenceGyurus/agents-wrapper
+After=network.target
+
+[Service]
+Type=simple
+User=bence
+WorkingDirectory=/Users/bence/Documents/programming/cli-agent-wrapper
+ExecStart=/Users/bence/Documents/programming/cli-agent-wrapper/.venv/bin/python /Users/bence/Documents/programming/cli-agent-wrapper/src/main.py --host 0.0.0.0 --port 11434
+Restart=always
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+Environment="PATH=/Users/bence/.gemini/antigravity/bin:/Users/bence/Library/Application Support/Antigravity/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Users/bence/.nix-profile/bin:/etc/profiles/per-user/bence/bin:/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin:/home/bence/.local/bin"
+StandardOutput=journal
+StandardError=journal
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

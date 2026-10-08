@@ -53,14 +53,43 @@ A kérések előtt és után tetszőleges **bővíthető rétegek (Layers / Inte
 ./run.sh
 ```
 
-### B. Python csomagként való telepítés (Debian / Linux / macOS)
+### B. Futtatás systemd szolgáltatásként (Debian / Linux)
+A rendszer háttérben történő, automatikus újrainduló szolgáltatásként való futtatásához:
+
+```bash
+# Automatikus beállítás és indítás:
+sudo ./setup-service.sh
+# vagy:
+sudo ./run.sh --service
+```
+
+Ez automatikusan:
+- Létrehozza a `.venv`-et és feltelepíti a függőségeket (ha még nincsenek).
+- Létrehozza a `/etc/systemd/system/agents-wrapper.service` fájlt a pontos elérési utakkal és PATH beállításokkal.
+- Engedélyezi a rendszerindításkori automatikus indulást (`systemctl enable`).
+- Azonnal elindítja a szolgáltatást a háttérben (`systemctl restart`).
+
+Kezelőparancsok Linuxon:
+```bash
+# Állapot ellenőrzése
+sudo systemctl status agents-wrapper
+
+# Valós idejű naplók
+sudo journalctl -u agents-wrapper -f
+
+# Újraindítás / Leállítás
+sudo systemctl restart agents-wrapper
+sudo systemctl stop agents-wrapper
+```
+
+### C. Python csomagként való telepítés (Debian / Linux / macOS)
 A projekt szabványos `pyproject.toml` konfigurációval rendelkezik:
 ```bash
 pip install .
 agents-wrapper --host 0.0.0.0 --port 11434
 ```
 
-### C. Docker konténer (Debian 12 Bookworm alapú)
+### D. Docker konténer (Debian 12 Bookworm alapú)
 A mellékelt `Dockerfile` hivatalos Debian 12 (Bookworm) minimalizált Python környezetre épül:
 
 ```bash
