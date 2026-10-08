@@ -21,10 +21,11 @@ class AntigravityBackend(BaseBackend):
     def _resolve_binary(self) -> str:
         resolved = shutil.which(self.binary_path)
         if not resolved:
-            # Check common homebrew / user locations
-            for candidate in ["/opt/homebrew/bin/agy", "/usr/local/bin/agy"]:
-                if shutil.which(candidate):
-                    return candidate
+            # Check common locations only if using the default name
+            if self.binary_path == "agy":
+                for candidate in ["/opt/homebrew/bin/agy", "/usr/local/bin/agy"]:
+                    if shutil.which(candidate):
+                        return candidate
             raise BackendExecutionError(
                 f"Antigravity CLI binary '{self.binary_path}' not found in PATH."
             )

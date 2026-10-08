@@ -30,3 +30,8 @@ audit.log
 # Local config overrides
 .env
 .env.local
+
+# Build & Packaging
+dist/
+build/
+*.egg-info/

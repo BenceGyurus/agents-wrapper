@@ -20,9 +20,10 @@ class CodexBackend(BaseBackend):
     def _resolve_binary(self) -> str:
         resolved = shutil.which(self.binary_path)
         if not resolved:
-            for candidate in ["/opt/homebrew/bin/codex", "/usr/local/bin/codex"]:
-                if shutil.which(candidate):
-                    return candidate
+            if self.binary_path == "codex":
+                for candidate in ["/opt/homebrew/bin/codex", "/usr/local/bin/codex"]:
+                    if shutil.which(candidate):
+                        return candidate
             raise BackendExecutionError(
                 f"Codex CLI binary '{self.binary_path}' not found in PATH."
             )

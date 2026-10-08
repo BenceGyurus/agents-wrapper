@@ -38,23 +38,42 @@ A kérések előtt és után tetszőleges **bővíthető rétegek (Layers / Inte
 
 ---
 
-## Telepítés és Indítás
+## Telepítés és Futtatás
 
-### 1. Előfeltételek
-- Python 3.10+
-- Helyileg telepített `agy` (és/vagy `codex`) CLI.
-
-### 2. Indítás
-Egyszerűen futtasd az indító scriptet:
+### A. Közvetlen futtatás scripttel
 ```bash
 ./run.sh
 ```
-Ez automatikusan létrehozza a `.venv` környezetet, feltelepíti a minimális függőségeket (FastAPI, Uvicorn, Pydantic, PyYAML), és elindítja a szervert a **11434**-es porton (az Ollama alapértelmezett portja).
 
-Egyedi port vagy host megadása:
+### B. Python csomagként való telepítés (Debian / Linux / macOS)
+A projekt szabványos `pyproject.toml` konfigurációval rendelkezik:
 ```bash
-./run.sh --port 11434 --host 0.0.0.0
+pip install .
+agents-wrapper --host 0.0.0.0 --port 11434
 ```
+
+### C. Docker konténer (Debian 12 Bookworm alapú)
+A mellékelt `Dockerfile` hivatalos Debian 12 (Bookworm) minimalizált Python környezetre épül:
+
+```bash
+# Docker image építése
+docker build -t agents-wrapper:latest .
+
+# Konténer futtatása az Ollama natív 11434-es portján
+docker run -d \
+  -p 11434:11434 \
+  --name agents-wrapper \
+  agents-wrapper:latest
+```
+
+---
+
+## CI/CD Pipeline (GitHub Actions)
+
+A repository tartalmaz egy dedikált `.github/workflows/ci.yml` automatizált folyamatot, amely minden `main` ágra történő push és pull request esetén lefut:
+1. **Egységtesztek Linux/Debian környezetben:** Párhuzamosan teszteli a kódot Python 3.10, 3.11, 3.12 és 3.13 verziókon.
+2. **Csomag buildelés:** Létrehozza a szabványos `.whl` és `.tar.gz` csomagokat (`python -m build`), és ellenőrzi a telepíthetőséget.
+3. **Docker build & ellenőrzés:** Megépíti a Debian-alapú Docker image-et, elindítja a konténert, és `curl`-lel teszteli az Ollama `/api/version` végpontot.
 
 ---
 

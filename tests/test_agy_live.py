@@ -1,10 +1,12 @@
 import json
+import shutil
 import pytest
 from httpx import AsyncClient, ASGITransport
 from src.server import create_app
 from src.config import load_config
 
 
+@pytest.mark.skipif(shutil.which("agy") is None, reason="Antigravity CLI ('agy') not found in PATH")
 @pytest.mark.asyncio
 async def test_live_agy_chat_stream():
     """Live integration test invoking real agy CLI through the Ollama wrapper."""
