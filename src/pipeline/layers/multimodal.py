@@ -22,6 +22,7 @@ class MultimodalImageLayer(BaseLayer):
         (b"GIF87a", "gif"),
         (b"GIF89a", "gif"),
         (b"BM", "bmp"),
+        (b"%PDF-", "pdf"),
     ]
 
     def __init__(self, name: str = "multimodal_image", config: Dict[str, Any] = None):
@@ -29,11 +30,75 @@ class MultimodalImageLayer(BaseLayer):
         self.media_dir = Path(self.config.get("media_dir", "/tmp/agents_wrapper_media"))
         self.max_size_mb = self.config.get("max_image_size_mb", 25)
         self.max_size_bytes = self.max_size_mb * 1024 * 1024
+        self.max_images_per_request = self.config.get("max_images_per_request", 10)
+        
+        # Cleanup configuration
+        self.ttl_seconds = self.config.get("ttl_hours", 2) * 3600
+        self.max_storage_bytes = self.config.get("max_storage_mb", 500) * 1024 * 1024
+        self._last_cleanup_time = 0.0
+        self._cleanup_interval_seconds = 300.0  # Run cleanup at most once every 5 minutes
 
         try:
             self.media_dir.mkdir(parents=True, exist_ok=True)
+            self.cleanup_media_dir()
         except Exception as e:
-            logger.warning(f"Failed to create media directory '{self.media_dir}': {e}")
+            logger.warning(f"Failed to create or clean media directory '{self.media_dir}': {e}")
+
+    def cleanup_media_dir(self, force: bool = False) -> int:
+        """Deletes files older than TTL and enforces max storage capacity (LRU).
+        Returns the number of files deleted.
+        """
+        import time
+        now = time.time()
+        if not force and (now - self._last_cleanup_time < self._cleanup_interval_seconds):
+            return 0
+
+        self._last_cleanup_time = now
+        deleted_count = 0
+
+        if not self.media_dir.exists():
+            return 0
+
+        files = []
+        total_size = 0
+
+        # 1. TTL-based cleanup
+        for entry in self.media_dir.iterdir():
+            if not entry.is_file():
+                continue
+            try:
+                stat = entry.stat()
+                file_age = now - stat.st_mtime
+                if file_age > self.ttl_seconds:
+                    entry.unlink(missing_ok=True)
+                    deleted_count += 1
+                    logger.debug(f"TTL cleaned old attachment: {entry.name}")
+                else:
+                    files.append((stat.st_mtime, stat.st_size, entry))
+                    total_size += stat.st_size
+            except Exception as e:
+                logger.warning(f"Error inspecting media file {entry}: {e}")
+
+        # 2. Storage cap enforcement (purge oldest files if over limit)
+        if total_size > self.max_storage_bytes:
+            # Sort by mtime ascending (oldest first)
+            files.sort(key=lambda x: x[0])
+            target_size = int(self.max_storage_bytes * 0.75)  # reduce to 75% of limit
+
+            for _, size, file_path in files:
+                if total_size <= target_size:
+                    break
+                try:
+                    file_path.unlink(missing_ok=True)
+                    total_size -= size
+                    deleted_count += 1
+                    logger.info(f"Storage cap evicted media file: {file_path.name}")
+                except Exception as e:
+                    logger.warning(f"Failed to delete {file_path}: {e}")
+
+        if deleted_count > 0:
+            logger.info(f"Media cleanup finished: removed {deleted_count} stale/overflow files.")
+        return deleted_count
 
     def _detect_extension(self, data: bytes) -> str:
         """Determines image extension from binary header magic bytes."""
@@ -63,8 +128,21 @@ class MultimodalImageLayer(BaseLayer):
         return collected
 
     async def pre_process(self, ctx: PipelineContext) -> PipelineContext:
+        # Periodic cleanup of expired or overflow media files
+        self.cleanup_media_dir()
+
         images_b64 = self._extract_images_from_context(ctx)
         if not images_b64:
+            return ctx
+
+        # Enforce maximum number of attachments per request
+        if len(images_b64) > self.max_images_per_request:
+            reason = (
+                f"Too many file attachments: received {len(images_b64)}, "
+                f"maximum allowed is {self.max_images_per_request}."
+            )
+            logger.warning(reason)
+            ctx.abort(f"Security Alert: {reason}", status_code=400)
             return ctx
 
         ctx.raw_images.extend(images_b64)

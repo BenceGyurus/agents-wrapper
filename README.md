@@ -24,10 +24,14 @@ A kérések előtt és után tetszőleges **bővíthető rétegek (Layers / Inte
     - `codex`: Codex CLI futtatás.
     - `codex:readonly`, `codex:workspace-write`: Különböző sandbox szintekkel.
     - `mock`: Villámgyors tesztelő modell a rétegek ellenőrzésére.
-- **Multimodális képtámogatás (Vision / Multimodal):**
-  - Képek feltöltése és feldolgozása Open WebUI-ból és az Ollama API-ból (`images: ["base64..."]`).
-  - A modellek automatikusan hirdetik a `clip` családot a `GET /api/tags`-ben, így az **Open WebUI automatikusan megjeleníti a képfeltöltés / gémkapocs ikont**.
-  - A beérkező base64 képeket a `MultimodalImageLayer` biztonságosan ellenőrzi (méretkorlát, formátum detektálás: PNG, JPG, GIF, WEBP) és lementi a lemezre, majd átadja a fájl elérési útját a CLI ágensnek (`view_file`), ami a Gemini / multimodális látásával elemzi azt.
+- **Multimodális csatolmányok & Képfeldolgozás (Vision & Documents):**
+  - Képek és dokumentumok feltöltése az Open WebUI-ból és az Ollama API-ból (`images: ["base64..."]`).
+  - **Támogatott formátumok:** PNG, JPEG, GIF, WEBP, BMP, valamint **PDF** dokumentumok!
+  - **Biztonsági korlátok:** Kérésenkénti maximális fájlszám (`max_images_per_request: 10`), valamint fájlonkénti méretkorlát (`max_image_size_mb: 25`).
+  - **Automatikus lemeztakarítás (Cleanup Engine):**
+    - **TTL alapú törlés:** A megadott időnél régebbi csatolmányok automatikusan törlődnek (`ttl_hours: 2`).
+    - **Kapacitáslimit (Storage Cap):** Ha a mappa mérete eléri a limitet (`max_storage_mb: 500`), a rendszer a legrégebbi fájlokat automatikusan törli (LRU).
+  - Az Open WebUI automatikusan felismeri a látási képességet a `clip` családon keresztül (`GET /api/tags`).
 - **Pluggable Layer / Middleware Rendszer:**
   - **Security Layer:**
     - Prompt Injection és Jailbreak kísérletek felismerése és blokkolása.
