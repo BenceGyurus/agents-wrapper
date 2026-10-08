@@ -1,0 +1,71 @@
+server:
+  host: "0.0.0.0"
+  port: 11434  # Default Ollama port so Open WebUI connects seamlessly
+  log_level: "info"
+
+backends:
+  agy:
+    binary_path: "agy"
+    default_model: "gemini-3.8-flash-high"
+    default_effort: "high"
+    auto_discover_models: true
+    timeout_seconds: 120
+
+  codex:
+    binary_path: "codex"
+    default_sandbox: "read-only"
+    timeout_seconds: 120
+
+pipeline:
+  layers:
+    # 1. Security Check Layer
+    - name: "security_check"
+      enabled: true
+      config:
+        block_on_prompt_injection: true
+        block_on_secret_leak: true
+        block_on_destructive_commands: true
+        custom_blocked_patterns: []
+
+    # 2. Sanitizer & Formatter Layer
+    - name: "prompt_sanitizer"
+      enabled: true
+      config:
+        strip_excess_whitespace: true
+        include_system_prompt_prefix: true
+
+    # 3. Audit Logging Layer
+    - name: "audit_logger"
+      enabled: true
+      config:
+        log_to_console: true
+        log_file: "audit.log"
+
+    # 4. Optional External Hook (for external RAG services or webhooks)
+    - name: "external_hook"
+      enabled: false
+      config:
+        webhook_url: ""
+        timeout_seconds: 5
+
+# Explicit custom profiles (dynamic models like agy:* and codex:* work out of the box too)
+profiles:
+  "agy-secure":
+    backend: "agy"
+    model: "gemini-3.8-flash-high"
+    description: "Antigravity CLI with full security checks and code review mode"
+    pipeline_overrides:
+      security_check:
+        block_on_prompt_injection: true
+        block_on_destructive_commands: true
+
+  "agy-plan":
+    backend: "agy"
+    model: "gemini-3.8-flash-high"
+    mode: "plan"
+    description: "Antigravity CLI in planning mode"
+
+  "codex-readonly":
+    backend: "codex"
+    sandbox: "read-only"
+    description: "OpenAI Codex CLI in sandboxed read-only mode"
