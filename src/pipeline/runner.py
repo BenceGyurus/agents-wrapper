@@ -7,6 +7,7 @@ from src.pipeline.layers import (
     PromptSanitizerLayer,
     AuditLayer,
     ExternalHookLayer,
+    MultimodalImageLayer,
 )
 from src.config import PipelineConfig
 
@@ -19,6 +20,7 @@ class PipelineRunner:
     # Built-in layer registry
     REGISTRY: Dict[str, Type[BaseLayer]] = {
         "security_check": SecurityLayer,
+        "multimodal_image": MultimodalImageLayer,
         "prompt_sanitizer": PromptSanitizerLayer,
         "audit_logger": AuditLayer,
         "external_hook": ExternalHookLayer,

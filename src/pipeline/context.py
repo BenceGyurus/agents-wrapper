@@ -20,6 +20,10 @@ class PipelineContext:
     # Injected extra context (e.g. from RAG or security notes)
     injected_context: List[str] = field(default_factory=list)
 
+    # Multimodal image attachments
+    raw_images: List[str] = field(default_factory=list)
+    saved_image_paths: List[str] = field(default_factory=list)
+
     def abort(self, reason: str, status_code: int = 400) -> None:
         """Short-circuits the pipeline immediately."""
         self.aborted = True

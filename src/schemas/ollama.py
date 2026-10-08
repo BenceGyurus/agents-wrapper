@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 class ChatMessage(BaseModel):
     role: str
     content: str
+    images: Optional[List[str]] = None
 
 
 class ChatRequest(BaseModel):
@@ -21,6 +22,7 @@ class GenerateRequest(BaseModel):
     model: str
     prompt: str
     system: Optional[str] = None
+    images: Optional[List[str]] = None
     stream: bool = True
     format: Optional[str] = None
     options: Optional[Dict[str, Any]] = None
@@ -31,7 +33,7 @@ class ModelDetails(BaseModel):
     parent_model: str = ""
     format: str = "cli"
     family: str = "antigravity"
-    families: List[str] = Field(default_factory=lambda: ["cli"])
+    families: List[str] = Field(default_factory=lambda: ["cli", "clip"])
     parameter_size: str = "agent"
     quantization_level: str = "none"
 

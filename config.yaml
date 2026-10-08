@@ -27,7 +27,14 @@ pipeline:
         block_on_destructive_commands: true
         custom_blocked_patterns: []
 
-    # 2. Sanitizer & Formatter Layer
+    # 2. Multimodal Image Processor Layer
+    - name: "multimodal_image"
+      enabled: true
+      config:
+        media_dir: "/tmp/agents_wrapper_media"
+        max_image_size_mb: 25
+
+    # 3. Sanitizer & Formatter Layer
     - name: "prompt_sanitizer"
       enabled: true
       config:
